@@ -6,6 +6,40 @@
  *
  * @ingroup pathauto
  */
+use Drupal\Core\Database\Database;
+
+/**
+ * Implements hook_schema().
+ */
+function pathauto_schema() {
+  $schema['pathauto_state'] = array(
+    'description' => 'The status of each entity alias (whether it was automatically generated or not).',
+    'fields' => array(
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'description' => 'An entity type.',
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'An entity ID.',
+      ),
+      'pathauto' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The automatic alias status of the entity.',
+      ),
+    ),
+    'primary key' => array('entity_type', 'entity_id'),
+  );
+
+  return $schema;
+}
 
 /**
  * Implements hook_install().
@@ -14,4 +48,38 @@ function pathauto_install() {
   // Set the weight to 1
   module_set_weight('pathauto', 1);
 
+}
+
+/**
+ * Create pathauto_state table, using data from pathauto_persist if it exists.
+ */
+function pathauto_update_8001() {
+  if (!Database::getConnection()->schema()->tableExists('pathauto_state')) {
+
+    $schema['pathauto_state'] = array(
+      'description' => 'The status of each entity alias (whether it was automatically generated or not).',
+      'fields' => array(
+        'entity_type' => array(
+          'type' => 'varchar',
+          'length' => 32,
+          'not null' => TRUE,
+          'description' => 'The entity type.',
+        ),
+        'entity_id' => array(
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'description' => 'The entity ID.',
+        ),
+        'pathauto' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+          'description' => 'The automatic alias status of the entity.',
+        ),
+      ),
+      'primary key' => array('entity_type', 'entity_id'),
+    );
+  }
 }
