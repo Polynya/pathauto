@@ -151,19 +151,47 @@ abstract class EntityAliasTypeBase extends PluginBase implements AliasTypeInterf
     // If the module supports a set of specialized patterns, set
     // them up here.
     $patterns = $this->getPatterns();
-    foreach ($patterns as $itemname => $itemlabel) {
+    foreach ($patterns as $itemname => $item) {
       $key = 'default';
-      $form['bundles'][$itemname][$key] = array(
-        '#type' => 'textfield',
-        '#title' => $itemlabel,
-        '#default_value' => isset($this->configuration['bundles'][$itemname][$key]) ? $this->configuration['bundles'][$itemname][$key] : NULL,
-        '#size' => 65,
-        '#maxlength' => 1280,
-        '#element_validate' => array('token_element_validate'),
-        '#after_build' => array('token_element_validate'),
-        '#token_types' => $this->getTokenTypes(),
-        '#min_tokens' => 1,
-      );
+      if (!is_array($item)) {
+        $form['bundles'][$itemname][$key] = array(
+          '#type' => 'textfield',
+          '#title' => $item,
+          '#default_value' => isset($this->configuration['bundles'][$itemname][$key]) ? $this->configuration['bundles'][$itemname][$key] : NULL,
+          '#size' => 65,
+          '#maxlength' => 1280,
+          '#element_validate' => array('token_element_validate'),
+          '#after_build' => array('token_element_validate'),
+          '#token_types' => $this->getTokenTypes(),
+          '#min_tokens' => 1,
+        );
+      }
+      else {
+        $form['bundles'][$itemname][$key] = array(
+          '#type' => 'textfield',
+          '#title' => $item[$key],
+          '#default_value' => isset($this->configuration['bundles'][$itemname][$key]) ? $this->configuration['bundles'][$itemname][$key] : NULL,
+          '#size' => 65,
+          '#maxlength' => 1280,
+          '#element_validate' => array('token_element_validate'),
+          '#after_build' => array('token_element_validate'),
+          '#token_types' => $this->getTokenTypes(),
+          '#min_tokens' => 1,
+          ); 
+        foreach ($item['languages'] as $language => $itemLabel) {
+          $form['bundles'][$itemname]['languages'][$language] = array(
+            '#type' => 'textfield',
+            '#title' => $itemLabel,
+            '#default_value' => isset($this->configuration['bundles'][$itemname]['languages'][$language]) ? $this->configuration['bundles'][$itemname]['languages'][$language] : NULL,
+            '#size' => 65,
+            '#maxlength' => 1280,
+            '#element_validate' => array('token_element_validate'),
+            '#after_build' => array('token_element_validate'),
+            '#token_types' => $this->getTokenTypes(),
+            '#min_tokens' => 1,
+          );
+        }
+      }
     }
 
     // Show the token help relevant to this pattern type.
@@ -184,9 +212,9 @@ abstract class EntityAliasTypeBase extends PluginBase implements AliasTypeInterf
     if ($this->entityManager->getDefinition($this->getEntityTypeId())->hasKey('bundle')) {
       foreach ($this->getBundles() as $bundle => $bundle_label) {
         if (count($languages) && $this->isContentTranslationEnabled($bundle)) {
-          $patterns[$bundle] = $this->t('Default path pattern for @bundle (applies to all @bundle fields with blank patterns below)', array('@bundle' => $bundle_label));
+          $patterns[$bundle]['default'] = $this->t('Default path pattern for @bundle (applies to all @bundle fields with blank patterns below)', array('@bundle' => $bundle_label));
           foreach ($languages as $language) {
-            $patterns[$bundle . '_' . $language->getId()] = $this->t('Pattern for all @language @bundle paths', array(
+            $patterns[$bundle]['languages'][$language->getId()] = $this->t('Pattern for all @language @bundle paths', array(
               '@bundle' => $bundle_label,
               '@language' => $language->getName()
             ));
